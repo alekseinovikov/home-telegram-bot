@@ -1,0 +1,13 @@
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: home-bot-ingress
+spec:
+  rules:
+    - host: alekseinovikov-pi
+      http:
+        paths:
+          - path: /
+            backend:
+              serviceName: home-bot-service
+              servicePort: 8080

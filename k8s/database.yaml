@@ -45,7 +45,7 @@ metadata:
 spec:
   selector:
     app: bot-postgresql-db
-  type: LoadBalancer
+  type: NodePort
   ports:
     - port: 5432
       targetPort: 5432

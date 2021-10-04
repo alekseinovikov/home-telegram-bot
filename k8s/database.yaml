@@ -29,15 +29,11 @@ spec:
               value: bot_db
             - name: PGDATA
               value: /data/pgdata
-  # Volume Claim
-  volumeClaimTemplates:
-    - metadata:
-        name: bot-postgresql-db-disk
-      spec:
-        accessModes: ["ReadWriteOnce"]
-        resources:
-          requests:
-            storage: 1Gi
+      volumes:
+        - name: bot-postgresql-db-disk
+          hostPath:
+            path: /data/bot/postgresql
+            type: DirectoryOrCreate
 
 ---
 

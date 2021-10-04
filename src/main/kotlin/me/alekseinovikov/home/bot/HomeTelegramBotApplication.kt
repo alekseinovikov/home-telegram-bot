@@ -1,4 +1,4 @@
-package me.alekseinovikov.home.bot.hometelegrambot
+package me.alekseinovikov.home.bot
 
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication

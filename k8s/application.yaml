@@ -1,0 +1,52 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: home-bot
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: home-bot
+      id: "home-bot"
+  template:
+    metadata:
+      labels:
+        app: home-bot
+        id: "home-bot"
+    spec:
+      containers:
+        - name: home-bot
+          image: alekseinovikov/home-telegram-bot:latest
+          imagePullPolicy: Always
+          env:
+            - name: DB_HOST
+              value: "bot-postgresql-db-service"
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_NAME
+              value: "bot_db"
+            - name: DB_USER
+              value: "root"
+            - name: DB_PASSWORD
+              value: "123456"
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+              name: web
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: home-bot-service
+  name: "home-bot-service"
+spec:
+  ports:
+    - name: web
+      port: 8080
+      protocol: TCP
+  selector:
+    app: home-bot
+  type: NodePort

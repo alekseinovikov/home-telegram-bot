@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: home-bot
-          image: alekseinovikov/home-telegram-bot:latest
+          image: alekseinovikov/home-telegram-bot:0.0.1-home-page
           imagePullPolicy: Always
           env:
             - name: DB_HOST

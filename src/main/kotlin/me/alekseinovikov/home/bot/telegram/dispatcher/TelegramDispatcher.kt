@@ -1,7 +1,7 @@
 package me.alekseinovikov.home.bot.telegram.dispatcher
 
+import com.github.kotlintelegrambot.Bot
 import com.github.kotlintelegrambot.dispatcher.*
-import com.github.kotlintelegrambot.dispatcher.message
 import com.github.kotlintelegrambot.entities.*
 import com.github.kotlintelegrambot.entities.dice.DiceEmoji
 import com.github.kotlintelegrambot.entities.inlinequeryresults.InlineQueryResult
@@ -12,11 +12,86 @@ import com.github.kotlintelegrambot.entities.keyboard.InlineKeyboardButton
 import com.github.kotlintelegrambot.entities.keyboard.KeyboardButton
 import com.github.kotlintelegrambot.extensions.filters.Filter
 import com.github.kotlintelegrambot.network.fold
+import me.alekseinovikov.home.bot.service.FunctionalServiceManager
+import me.alekseinovikov.home.bot.service.InlineButtonsMessage
+import me.alekseinovikov.home.bot.service.MarkdownTextMessage
+import me.alekseinovikov.home.bot.service.Message
 import org.springframework.stereotype.Component
 
 @Component
-class TelegramDispatcher : DispatchProvider {
+class TelegramDispatcher(private val serviceManager: FunctionalServiceManager) : DispatchProvider {
+
+    private val buttonsChunkSize = 2
+
+    val serviceButtons by lazy {
+        InlineKeyboardMarkup.create(serviceManager.services
+            .map { it.type }
+            .map { InlineKeyboardButton.CallbackData(text = it.title, callbackData = it.name) }
+            .chunked(buttonsChunkSize))
+    }
+
+
+    private fun sendAnswer(message: Message, bot: Bot) {
+        when (message) {
+            is InlineButtonsMessage -> sendInlineButtons(message, bot)
+            is MarkdownTextMessage -> sendMarkdownMessage(message, bot)
+        }
+    }
+
+    private fun sendInlineButtons(message: InlineButtonsMessage, bot: Bot) {
+        //TODO: IMPLEMENT BUTTONS!
+    }
+
+    private fun sendMarkdownMessage(message: MarkdownTextMessage, bot: Bot) {
+        val response = bot.sendMessage(
+            chatId = ChatId.fromId(message.chatId),
+            text = message.text,
+            parseMode = ParseMode.MARKDOWN_V2
+        )
+
+        response.fold {
+            val responseText = String(it.errorBody?.bytes() ?: ByteArray(0))
+            println(responseText)
+        }
+    }
+
     override fun provide(): Dispatcher.() -> Unit = {
+        command("bot") {
+            bot.sendMessage(
+                chatId = ChatId.fromId(message.chat.id),
+                text = "Выбери доступный сервис из списка!",
+                replyMarkup = serviceButtons
+            )
+        }
+
+        serviceManager.services.forEach { service ->
+            callbackQuery(callbackData = service.type.name) {
+                val chatId = callbackQuery.message?.chat?.id ?: return@callbackQuery
+                val user = callbackQuery.from
+
+                val foundService = serviceManager.getByTypeName(callbackQuery.data) ?: return@callbackQuery
+                val message = foundService.start(chatId, user)
+                sendAnswer(message, bot)
+            }
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         message(Filter.Sticker) {
             bot.sendMessage(ChatId.fromId(message.chat.id), text = "You have received an awesome sticker \\o/")
         }
